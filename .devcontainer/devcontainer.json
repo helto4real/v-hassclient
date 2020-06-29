@@ -10,6 +10,9 @@
 		// "terminal.integrated.shell.linux": "/bin/ash"
 	},
 	"postCreateCommand": "dotnet restore && .devcontainer/install_prettyprompt.sh",
+	"remoteEnv": {
+		"HASS_TOKEN": "${localEnv:HASS_TOKEN}"
+	},
 	// Uncomment the next line if you want to publish any ports.
 	// "appPort": [
 		// 5001

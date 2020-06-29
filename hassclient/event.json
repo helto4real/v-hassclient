@@ -1,0 +1,49 @@
+{
+    "id": 1,
+    "type": "event",
+    "event": {
+        "event_type": "state_changed",
+        "data": {
+            "entity_id": "sensor.load_15m",
+            "old_state": {
+                "entity_id": "sensor.load_15m",
+                "state": "0.08",
+                "attributes": {
+                    "unit_of_measurement": " ",
+                    "friendly_name": "Load (15m)",
+                    "icon": "mdi:memory"
+                },
+                "last_changed": "2020-06-02T15:38:06.015959+00:00",
+                "last_updated": "2020-06-02T15:38:06.015959+00:00",
+                "context": {
+                    "id": "4ede1f68bac34f2aa28cd038313ffff6",
+                    "parent_id": null,
+                    "user_id": null
+                }
+            },
+            "new_state": {
+                "entity_id": "sensor.load_15m",
+                "state": "0.07",
+                "attributes": {
+                    "unit_of_measurement": " ",
+                    "friendly_name": "Load (15m)",
+                    "icon": "mdi:memory"
+                },
+                "last_changed": "2020-06-02T15:40:09.021212+00:00",
+                "last_updated": "2020-06-02T15:40:09.021212+00:00",
+                "context": {
+                    "id": "5cf86f8a91aa49e6a24c6de8a8aeb511",
+                    "parent_id": null,
+                    "user_id": null
+                }
+            }
+        },
+        "origin": "LOCAL",
+        "time_fired": "2020-06-02T15:40:09.021294+00:00",
+        "context": {
+            "id": "5cf86f8a91aa49e6a24c6de8a8aeb511",
+            "parent_id": null,
+            "user_id": null
+        }
+    }
+}
