@@ -40,9 +40,9 @@ pub fn new_connection(cc ConnectionConfig) &HassConnection {
 
 	c.ws.subscriber.subscribe_method('on_open', on_open, c)
 	c.ws.subscriber.subscribe_method('on_message', on_message, c)
-	c.ws.subscriber.subscribe_method('on_error', on_error, c)
-	c.ws.subscriber.subscribe_method('on_close', on_close, c)
-
+	// c.ws.subscriber.subscribe_method('on_error', on_error, c)
+	// c.ws.subscriber.subscribe_method('on_close', on_close, c)
+// 
 	c.logger.set_level(cc.log_level)
 	c.logger.debug('Initialized HassConnection')
 
@@ -66,15 +66,17 @@ pub fn (mut c HassConnection) connect () {
 		time.sleep_ms(5000)
 	}
 }
-
-fn on_open(mut c HassConnection, ws websocket.Client, _ voidptr) {
+//&websocket.Client
+fn on_open(mut c HassConnection, ws voidptr, x voidptr) {
+	println('c: $c.hass_uri, ws: $ws, x: $x')
+	// println(ws.nonce_size)
 	c.logger.debug('Websocket opened')
 }
 
 // Try to see if this fixes anything from @spytheman
-fn check(){ m := HassMessage{} println(m) }
+// fn check(){ m := HassMessage{} println(m) }
 
-fn on_message(mut c HassConnection, ws websocket.Client, msg &websocket.Message) {
+fn on_message(c &HassConnection, msg &websocket.Message, ws &websocket.Client) {
 	match msg.opcode {
 		.text_frame {
 			msg_str := string(byteptr(msg.payload))
@@ -128,10 +130,10 @@ fn on_message(mut c HassConnection, ws websocket.Client, msg &websocket.Message)
 	}
 }
 
-fn on_close(mut c HassConnection, ws websocket.Client, _ voidptr) {
-	c.logger.debug('websocket closed.')
-}
+// fn on_close(mut c HassConnection, ws &websocket.Client, x voidptr) {
+// 	c.logger.debug('websocket closed.')
+// }
 
-fn on_error(mut c HassConnection, ws websocket.Client, err string) {
-	c.logger.error(err)
-}
+// fn on_error(mut c HassConnection, ws &websocket.Client, err &string) {
+// 	c.logger.error(err)
+// }

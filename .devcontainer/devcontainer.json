@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/master/containers/dotnetcore-latest
 {
 	"name": "V (devcontainer)",
-	"dockerFile": "Dockerfile",
+	"image": "thevlang/vlang:buster-dev",
 	// Use 'settings' to set *default* container specific settings.json values on container create.
 	// You can edit these settings after create using File > Preferences > Settings > Remote.
 	"settings": {
@@ -15,7 +15,7 @@
 	},
 	// Uncomment the next line if you want to publish any ports.
 	// "appPort": [
-		// 5001
+	// 5001
 	// ],
 	// Uncomment the next line to run commands after the container is created.
 	// "postCreateCommand": "",
