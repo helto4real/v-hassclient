@@ -4,10 +4,10 @@ module channel
 #include <pthread.h>
 
 
-fn C.pthread_cond_init(c &C.pthread_cond_t, m &C.pthread_mutex_t) int
+// fn C.pthread_cond_init(c &C.pthread_cond_t, m &C.pthread_mutex_t) int
 fn C.pthread_cond_destroy(c &C.pthread_cond_t) int
-fn C.pthread_cond_wait(c &C.pthread_cond_t, m &C.pthread_mutex_t) int
-fn C.pthread_cond_signal(c &C.pthread_cond_t) int
+// fn C.pthread_cond_wait(c &C.pthread_cond_t, m &C.pthread_mutex_t) int
+// fn C.pthread_cond_signal(c &C.pthread_cond_t) int
 fn C.pthread_cond_broadcast(c &C.pthread_cond_t) int
 fn C.pthread_mutex_destroy(m &C.pthread_mutex_t) int
 
@@ -57,9 +57,7 @@ pub fn (mut c Channel) write(item voidptr) ?bool {
 			}
 			c.w_waiting--
 		}
-
 		c.queue.push(item) or {return error(err)}
-
 		if c.r_waiting > 0 {
 			if C.pthread_cond_signal(&c.r_cond) != 0 {
 				return error('failed to set signal for read condiational')

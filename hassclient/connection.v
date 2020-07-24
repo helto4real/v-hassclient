@@ -1,6 +1,6 @@
 module hassclient
-import net.websocket
-import time
+import helto4real.websocket
+// import time
 import log
 import os
 import channel
@@ -24,25 +24,22 @@ pub struct ConnectionConfig {
 }
 
 // Instance new connection to Home Assistant
-pub fn new_connection(cc ConnectionConfig) &HassConnection {
+pub fn new_connection(cc ConnectionConfig)? &HassConnection {
 
-	token := if cc.token != '' { cc.token } else { os.getenv('HASS_TOKEN') }
+	token := if cc.token != '' { cc.token } else { os.getenv('HOMEASSISTANT__TOKEN') }
 	state_chan := channel.new_buffered_channel(100) or {panic(err)}
-
+	cl := websocket.new_client(cc.hass_uri)?
 	mut c := &HassConnection {
 		hass_uri: cc.hass_uri,
 		token: token,
-		ws: websocket.new(cc.hass_uri)
+		ws: cl
 		state_chan: state_chan
 		logger: &log.Log{}
 	}
 	c.ws.nonce_size = 16 // For python back-ends
 
-	c.ws.subscriber.subscribe_method('on_open', on_open, c)
-	c.ws.subscriber.subscribe_method('on_message', on_message, c)
-	// c.ws.subscriber.subscribe_method('on_error', on_error, c)
-	// c.ws.subscriber.subscribe_method('on_close', on_close, c)
-// 
+	// c.ws.on_open(on_open, c)
+	c.ws.on_message_ref(on_message, c)
 	c.logger.set_level(cc.log_level)
 	c.logger.debug('Initialized HassConnection')
 
@@ -55,31 +52,29 @@ pub fn (mut c HassConnection) state_change() ?&HassEventData {
 }
 
 // Connects to Home Assistant
-pub fn (mut c HassConnection) connect () {
+pub fn (mut c HassConnection) connect ()? {
 	mut ws := c.ws
 	c.logger.debug('Connecting to Home Assistant at $c.hass_uri')
-	status := ws.connect()
-	c.logger.debug('Connect status: ${status}')
-	go ws.listen()
+	ws.connect()?
+	// c.logger.debug('Connect status: ${status}')
+	ws.listen()?
 
-	for true {
-		time.sleep_ms(5000)
-	}
 }
-//&websocket.Client
-fn on_open(mut c HassConnection, ws voidptr, x voidptr) {
-	println('c: $c.hass_uri, ws: $ws, x: $x')
-	// println(ws.nonce_size)
-	c.logger.debug('Websocket opened')
-}
+// //&websocket.Client
+// fn on_open(mut c HassConnection, ws voidptr, x voidptr) {
+// 	println('c: $c.hass_uri, ws: $ws, x: $x')
+// 	// println(ws.nonce_size)
+// 	c.logger.debug('Websocket opened')
+// }
 
 // Try to see if this fixes anything from @spytheman
 // fn check(){ m := HassMessage{} println(m) }
 
-fn on_message(c &HassConnection, msg &websocket.Message, ws &websocket.Client) {
+fn on_message(mut ws websocket.Client, msg &websocket.Message, c &HassConnection)? {
+	// println('NEW MESSAGE: $msg.opcode, $msg.payload')
 	match msg.opcode {
 		.text_frame {
-			msg_str := string(byteptr(msg.payload))
+			msg_str := string(msg.payload)
 			hass_msg := parse_hass_message(msg_str) or
 						{
 							c.logger.error(err)
@@ -90,14 +85,14 @@ fn on_message(c &HassConnection, msg &websocket.Message, ws &websocket.Client) {
 				'auth_required' {
 					c.logger.debug('Got auth_required, sending token...')
 					auth_message := new_auth_message(c.token)
-					c.ws.write(auth_message.str, auth_message.len, .text_frame)
+					c.ws.write(auth_message.bytes(), .text_frame)
 				}
 				// When auth is ok, setup subscriptions for all events
 				'auth_ok' {
 					c.logger.debug('Authentication success, subscribe to events...')
 					c.sequence++
 					subscribe_msg := new_subscribe_events_message(c.sequence)
-					c.ws.write(subscribe_msg.str, subscribe_msg.len, .text_frame)
+					c.ws.write(subscribe_msg.bytes(), .text_frame)
 				}
 				'event' {
 					event_msg := parse_hass_event_message(msg_str) or
@@ -109,14 +104,13 @@ fn on_message(c &HassConnection, msg &websocket.Message, ws &websocket.Client) {
 						// Home Assistant entity has changed state or attributes
 						'state_changed' {
 							c.logger.debug('state_changed event...')
-							state_changed_event_msg := parse_hass_changed_event_message(msg_str) or
+							mut state_changed_event_msg := parse_hass_changed_event_message(msg_str) or
 							{
 								c.logger.error(err)
 								StateChangedEventMessage {}
 							}
-							event_data := state_changed_event_msg.event.data
-							c.state_chan.write(&event_data)
-
+							mut event_data := state_changed_event_msg.event.data.clone()
+							c.state_chan.write(event_data)
 						}
 						else {}
 					}

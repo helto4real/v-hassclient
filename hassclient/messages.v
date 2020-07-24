@@ -35,9 +35,21 @@ pub struct HassEventData {
 	pub mut:
 	new_state		HassState
 	old_state		HassState
-
-
 }
+
+// clone, clones to heap
+pub fn (ed &HassEventData) clone() &HassEventData {
+	mut event_data := &HassEventData{
+		entity_id: ed.entity_id
+		new_state: ed.new_state
+		old_state: ed.old_state
+	}
+	return event_data
+}
+
+// pub fn (ed &HassEventData) str() {
+// 	return ''
+// }
 pub struct HassEvent {
 	time_fired		string
 	pub:
@@ -45,22 +57,20 @@ pub struct HassEvent {
 }
 
 pub struct HassStateChangedEvent {
+	pub mut:
 	time_fired		string
-	mut:
 	data			HassEventData
 }
 
 pub struct StateChangedEventMessage {
-	pub:
+	pub mut:
 	id				int						= -1
-	mut:
 	event			HassStateChangedEvent
 }
 
 pub struct EventMessage {
-	pub:
+	pub mut:
 	id				int						= -1
-	mut:
 	event			HassEvent
 }
 
@@ -89,23 +99,19 @@ fn parse_hass_event_message(jsn string) ?EventMessage {
 	return msg
 }
 
-fn parse_hass_changed_event_message(jsn string) ?StateChangedEventMessage {
-	mut msg:= json.decode(StateChangedEventMessage, jsn) or {return error(err)}
+fn parse_hass_changed_event_message(jsn string) ? StateChangedEventMessage {
+	mut msg:= json.decode(StateChangedEventMessage, jsn)?
 
-	new_last_updated := time.parse_iso8601(msg.event.data.new_state.last_updated_str) or
-											{ return error(err)}
+	new_last_updated := time.parse_iso8601(msg.event.data.new_state.last_updated_str)?
 	msg.event.data.new_state.last_updated = new_last_updated
 
-	new_last_changed := time.parse_iso8601(msg.event.data.new_state.last_changed_str) or
-											{ return error(err)}
+	new_last_changed := time.parse_iso8601(msg.event.data.new_state.last_changed_str)?
 	msg.event.data.new_state.last_changed = new_last_changed
 
-	old_last_updated := time.parse_iso8601(msg.event.data.old_state.last_updated_str) or
-											{ return error(err)}
+	old_last_updated := time.parse_iso8601(msg.event.data.old_state.last_updated_str)?
 	msg.event.data.old_state.last_updated = old_last_updated
 
-	 old_last_changed := time.parse_iso8601(msg.event.data.old_state.last_changed_str) or
-											{ return error(err)}
+    old_last_changed := time.parse_iso8601(msg.event.data.old_state.last_changed_str)?
 	msg.event.data.old_state.last_changed = old_last_changed
 
 	return msg
