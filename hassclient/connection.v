@@ -70,7 +70,7 @@ pub fn (mut c HassConnection) connect ()? {
 // Try to see if this fixes anything from @spytheman
 // fn check(){ m := HassMessage{} println(m) }
 
-fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c &HassConnection)? {
+fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnection)? {
 	// println('NEW MESSAGE: $msg.opcode, $msg.payload')
 	match msg.opcode {
 		.text_frame {
