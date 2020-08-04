@@ -70,7 +70,7 @@ pub fn (mut c HassConnection) connect ()? {
 // Try to see if this fixes anything from @spytheman
 // fn check(){ m := HassMessage{} println(m) }
 
-fn on_message(mut ws websocket.Client, msg &websocket.Message, c &HassConnection)? {
+fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c &HassConnection)? {
 	// println('NEW MESSAGE: $msg.opcode, $msg.payload')
 	match msg.opcode {
 		.text_frame {
@@ -107,10 +107,13 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, c &HassConnection
 							mut state_changed_event_msg := parse_hass_changed_event_message(msg_str) or
 							{
 								c.logger.error(err)
-								StateChangedEventMessage {}
+								return none
 							}
 							mut event_data := state_changed_event_msg.event.data.clone()
 							c.state_chan.write(event_data)
+							// unsafe {
+							// 	state_changed_event_msg.free()
+							// }
 						}
 						else {}
 					}

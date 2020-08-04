@@ -29,6 +29,14 @@ pub struct HassState {
 	last_changed		time.Time
 }
 
+pub fn (mut se HassState) free() {
+	println('HassState IS FREEEEEE')
+	se.last_changed_str.free()
+	se.last_updated_str.free()
+	se.entity_id.free()
+	se.state.free()
+}
+
 pub struct HassEventData {
 	pub:
 	entity_id 		string
@@ -37,8 +45,14 @@ pub struct HassEventData {
 	old_state		HassState
 }
 
+pub fn (mut se HassEventData) free() {
+	println('HassEventData IS FREEEEEE')
+	se.new_state.free()
+	se.old_state.free()
+}
+
 // clone, clones to heap
-pub fn (ed &HassEventData) clone() &HassEventData {
+pub fn (ed HassEventData) clone() &HassEventData {
 	mut event_data := &HassEventData{
 		entity_id: ed.entity_id
 		new_state: ed.new_state
@@ -47,9 +61,6 @@ pub fn (ed &HassEventData) clone() &HassEventData {
 	return event_data
 }
 
-// pub fn (ed &HassEventData) str() {
-// 	return ''
-// }
 pub struct HassEvent {
 	time_fired		string
 	pub:
@@ -62,10 +73,28 @@ pub struct HassStateChangedEvent {
 	data			HassEventData
 }
 
+pub fn (mut se HassStateChangedEvent) free() {
+	println('HassStateChangedEvent IS FREEEEEE')
+	se.data.free()
+}
+
 pub struct StateChangedEventMessage {
 	pub mut:
 	id				int						= -1
 	event			HassStateChangedEvent
+}
+
+pub fn (mut se StateChangedEventMessage) free() {
+	println('StateChangedEventMessage IS FREEEEEE')
+	se.event.free()
+}
+// clone, clones to heap
+pub fn (ed &StateChangedEventMessage) clone() &StateChangedEventMessage {
+	mut ch_event := &StateChangedEventMessage{
+		id: ed.id
+		event: ed.event
+	}
+	return ch_event
 }
 
 pub struct EventMessage {
@@ -99,7 +128,7 @@ fn parse_hass_event_message(jsn string) ?EventMessage {
 	return msg
 }
 
-fn parse_hass_changed_event_message(jsn string) ? StateChangedEventMessage {
+fn parse_hass_changed_event_message(jsn string) ? &StateChangedEventMessage {
 	mut msg:= json.decode(StateChangedEventMessage, jsn)?
 
 	new_last_updated := time.parse_iso8601(msg.event.data.new_state.last_updated_str)?
@@ -114,7 +143,7 @@ fn parse_hass_changed_event_message(jsn string) ? StateChangedEventMessage {
     old_last_changed := time.parse_iso8601(msg.event.data.old_state.last_changed_str)?
 	msg.event.data.old_state.last_changed = old_last_changed
 
-	return msg
+	return msg.clone()
 }
 
 fn new_auth_message(token string) string {

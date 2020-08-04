@@ -35,7 +35,7 @@ fn main() {
 	// mut z := &TestStruct{}
 	// q << z
 
-	c := hc.new_connection(
+	mut c := hc.new_connection(
 		hc.ConnectionConfig {
 			hass_uri: "ws://192.168.1.7:8123/api/websocket",
 			token: '' // Uses the HASS_TOKEN env instead if empty
@@ -47,10 +47,10 @@ fn main() {
 
 	for {
 		mut event_data := c.state_change() or {panic(err)}
+		println('FROM QUEUE: $event_data')
 		unsafe {
 			free(event_data)
 		}
-		println('entity: $event_data')
 		// println('$state.entity_id : $state.new_state.state ($state.old_state.state), $state.new_state.last_updated; $state.new_state.last_updated.microsecond')
 	}
 }
