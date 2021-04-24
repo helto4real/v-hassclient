@@ -36,7 +36,9 @@ pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 	}
 	// c.ws.nonce_size = 16 // For python back-ends
 	c.ws.on_message_ref(on_message, c)
-	c.ws.on_close(fn (mut ws websocket.Client, close_reason int, a_string string) {println("SERVER CLOSED THE CONNECTION! ($close_reason), $a_string")} )
+	c.ws.on_close(fn (mut ws websocket.Client, close_reason int, a_string string) {
+		println("SERVER CLOSED THE CONNECTION! ($close_reason), ")
+		} )
 	c.logger.set_level(cc.log_level)
 	c.logger.debug('Initialized HassConnection')
 	return c
@@ -104,9 +106,3 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 	}
 }
 
-// fn on_close(mut c HassConnection, ws &websocket.Client, x voidptr) {
-// c.logger.debug('websocket closed.')
-// }
-// fn on_error(mut c HassConnection, ws &websocket.Client, err &string) {
-// c.logger.error(err)
-// }
