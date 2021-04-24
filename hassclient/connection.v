@@ -36,6 +36,7 @@ pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 	}
 	// c.ws.nonce_size = 16 // For python back-ends
 	c.ws.on_message_ref(on_message, c)
+	c.ws.on_close(fn (mut ws websocket.Client, close_reason int, a_string string) {println("SERVER CLOSED THE CONNECTION! ($close_reason), $a_string")} )
 	c.logger.set_level(cc.log_level)
 	c.logger.debug('Initialized HassConnection')
 	return c
@@ -54,7 +55,7 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 		.text_frame {
 			msg_str := msg.payload.bytestr()
 			hass_msg := parse_hass_message(msg_str) or {
-				c.logger.error(err)
+				c.logger.error(err.msg)
 				HassMessage{}
 			}
 			match hass_msg.message_type {
@@ -62,9 +63,9 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 				'auth_required' {
 					c.logger.debug('Got auth_required, sending token...')
 					auth_message := new_auth_message(c.token)
-					c.ws.write_str(auth_message)
+					c.ws.write_string(auth_message) ?
 					unsafe {
-						auth_message.free()
+						// auth_message.free()
 					}
 				}
 				// When auth is ok, setup subscriptions for all events
@@ -72,14 +73,11 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 					c.logger.debug('Authentication success, subscribe to events...')
 					c.sequence++
 					subscribe_msg := new_subscribe_events_message(c.sequence)
-					c.ws.write_str(subscribe_msg)
-					unsafe {
-						subscribe_msg.free()
-					}
+					c.ws.write_string(subscribe_msg) ?
 				}
 				'event' {
 					event_msg := parse_hass_event_message(msg_str) or {
-						c.logger.error(err)
+						c.logger.error(err.msg)
 						EventMessage{}
 					}
 					match event_msg.event.event_type {
@@ -87,26 +85,17 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 						'state_changed' {
 							c.logger.debug('state_changed event...')
 							mut state_changed_event_msg := parse_hass_changed_event_message(msg_str) or {
-								c.logger.error(err)
+								c.logger.error(err.msg)
 								return none
 							}
 							c.ch_state_changed <- state_changed_event_msg
 							println(state_changed_event_msg)
-							// unsafe {
-							// 	state_changed_event_msg.free()
-							// }
 						}
 						else {}
 					}
-					unsafe {
-						event_msg.free()
-					}
+
 				}
 				else {}
-			}
-			unsafe {
-				hass_msg.free()
-				msg_str.free()
 			}
 		}
 		else {
