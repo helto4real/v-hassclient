@@ -5,15 +5,15 @@ import log
 import os
 
 pub struct HassConnection {
-	hass_uri   string
+	hass_uri string
 pub:
-	token      string
+	token string
 mut:
-	ws         &websocket.Client
-	sequence   int = 1
-	logger     &log.Log
+	ws       &websocket.Client
+	sequence int = 1
+	logger   &log.Log
 pub mut:
-	ch_state_changed    chan StateChangedEventMessage
+	ch_state_changed chan StateChangedEventMessage
 }
 
 pub struct ConnectionConfig {
@@ -25,8 +25,8 @@ pub struct ConnectionConfig {
 // Instance new connection to Home Assistant
 pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 	token := if cc.token != '' { cc.token } else { os.getenv('HOMEASSISTANT__TOKEN') }
-	cl := websocket.new_client(cc.hass_uri)?
-	ch := chan StateChangedEventMessage{cap: 100} 
+	cl := websocket.new_client(cc.hass_uri) ?
+	ch := chan StateChangedEventMessage{cap: 100}
 	mut c := &HassConnection{
 		hass_uri: cc.hass_uri
 		token: token
@@ -36,9 +36,9 @@ pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 	}
 	// c.ws.nonce_size = 16 // For python back-ends
 	c.ws.on_message_ref(on_message, c)
-	c.ws.on_close(fn (mut ws websocket.Client, close_reason int, a_string string) {
-		println("SERVER CLOSED THE CONNECTION! ($close_reason), ")
-		} )
+	c.ws.on_close(fn (mut ws websocket.Client, close_code int, reason string) ? {
+		println('SERVER CLOSED THE CONNECTION! ($close_code), $reason')
+	})
 	c.logger.set_level(cc.log_level)
 	c.logger.debug('Initialized HassConnection')
 	return c
@@ -48,8 +48,8 @@ pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 pub fn (mut c HassConnection) connect() ? {
 	mut ws := c.ws
 	c.logger.debug('Connecting to Home Assistant at $c.hass_uri')
-	ws.connect()?
-	ws.listen()?
+	ws.connect() ?
+	ws.listen() ?
 }
 
 fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnection) ? {
@@ -95,7 +95,6 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 						}
 						else {}
 					}
-
 				}
 				else {}
 			}
@@ -105,4 +104,3 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 		}
 	}
 }
-
