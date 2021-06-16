@@ -88,7 +88,7 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 							c.logger.debug('state_changed event...')
 							mut state_changed_event_msg := parse_hass_changed_event_message(msg_str) or {
 								c.logger.error(err.msg)
-								return none
+								return
 							}
 							c.ch_state_changed <- state_changed_event_msg
 							println(state_changed_event_msg)
