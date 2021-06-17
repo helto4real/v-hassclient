@@ -3,7 +3,9 @@ module hassclient
 import x.websocket
 import log
 import os
+import x.json2
 
+[heap]
 pub struct HassConnection {
 	hass_uri string
 pub:
@@ -56,16 +58,22 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 	match msg.opcode {
 		.text_frame {
 			msg_str := msg.payload.bytestr()
-			hass_msg := parse_hass_message(msg_str) or {
-				c.logger.error(err.msg)
-				HassMessage{}
+			json_msg := json2.raw_decode(msg_str) or { json2.Any(json2.null) }
+
+			if json_msg == json2.Any(json2.null) {
+				c.logger.error('failed to parse json: $json_msg.str()')
+				return
 			}
-			match hass_msg.message_type {
+
+			mut mp := json_msg.as_map()
+			message_type := mp['type'].str()
+
+			match message_type {
 				// When auth_required send the authorization message with token
 				'auth_required' {
 					c.logger.debug('Got auth_required, sending token...')
 					auth_message := new_auth_message(c.token)
-					c.ws.write_string(auth_message) ?
+					c.ws.write_string(auth_message.encode_json()) ?
 					unsafe {
 						// auth_message.free()
 					}
@@ -75,21 +83,15 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 					c.logger.debug('Authentication success, subscribe to events...')
 					c.sequence++
 					subscribe_msg := new_subscribe_events_message(c.sequence)
-					c.ws.write_string(subscribe_msg) ?
+					c.ws.write_string(subscribe_msg.encode_json()) ?
 				}
 				'event' {
-					event_msg := parse_hass_event_message(msg_str) or {
-						c.logger.error(err.msg)
-						EventMessage{}
-					}
+					event_msg := parse_hass_event_message(json_msg)
 					match event_msg.event.event_type {
 						// Home Assistant entity has changed state or attributes
 						'state_changed' {
 							c.logger.debug('state_changed event...')
-							mut state_changed_event_msg := parse_hass_changed_event_message(msg_str) or {
-								c.logger.error(err.msg)
-								return
-							}
+							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg)
 							c.ch_state_changed <- state_changed_event_msg
 							println(state_changed_event_msg)
 						}
