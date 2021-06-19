@@ -1,0 +1,28 @@
+name: Code CI
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+jobs:
+  # Ubuntu docker pre-built container
+  build:
+    name: build on ubuntu
+    runs-on: ubuntu-20.04
+    timeout-minutes: 45
+    container:
+      image: thevlang/vlang:buster
+      volumes:
+        - ${{github.workspace}}:/tmp/client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test HassClient
+        run: |
+          v test /tmp/client
