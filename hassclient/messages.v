@@ -14,12 +14,14 @@ pub:
 }
 
 // Parse the message type from Home Assistant message
-// fn parse_hass_message(json json2.Any) HassMessage {
-// 	mut mp := json.as_map()
+fn parse_hass_message(json json2.Any) HassMessage {
+	mut mp := json.as_map()
 
-// 	// msg:= json.decode(HassMessage, jsn)?
-// 	return msg
-// }
+	return HassMessage{
+		id: mp['id'].int()
+		message_type: mp['type'].str()
+	}
+}
 
 pub struct HassState {
 	last_changed_str string [json: 'last_changed']
