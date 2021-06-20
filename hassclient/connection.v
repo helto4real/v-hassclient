@@ -15,7 +15,7 @@ mut:
 	sequence int = 1
 	logger   &log.Log
 pub mut:
-	ch_state_changed chan StateChangedEventMessage
+	events_channel chan StateChangedEventMessage
 }
 
 pub struct ConnectionConfig {
@@ -33,7 +33,7 @@ pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 		hass_uri: cc.hass_uri
 		token: token
 		ws: cl
-		ch_state_changed: ch
+		events_channel: ch
 		logger: &log.Log{}
 	}
 	// c.ws.nonce_size = 16 // For python back-ends
@@ -74,9 +74,6 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 					c.logger.debug('Got auth_required, sending token...')
 					auth_message := new_auth_message(c.token)
 					c.ws.write_string(auth_message.encode_json()) ?
-					unsafe {
-						// auth_message.free()
-					}
 				}
 				// When auth is ok, setup subscriptions for all events
 				'auth_ok' {
@@ -86,13 +83,13 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 					c.ws.write_string(subscribe_msg.encode_json()) ?
 				}
 				'event' {
-					event_msg := parse_hass_event_message(json_msg)
-					match event_msg.event.event_type {
+					event := mp['event'].as_map() //parse_hass_event_message(json_msg)
+					match event['event_type'].str() {
 						// Home Assistant entity has changed state or attributes
 						'state_changed' {
 							c.logger.debug('state_changed event...')
 							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg)
-							c.ch_state_changed <- state_changed_event_msg
+							c.events_channel <- state_changed_event_msg
 							println(state_changed_event_msg)
 						}
 						else {}

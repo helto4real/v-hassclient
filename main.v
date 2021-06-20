@@ -17,7 +17,7 @@ fn main() {
 
 fn handle_new_messages(mut c hc.HassConnection) {
 	for {
-		mut event_data := <-c.ch_state_changed
+		mut event_data := <-c.events_channel
 		println('FROM CHANNEL: $event_data')
 	}
 }

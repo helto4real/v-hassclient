@@ -29,7 +29,7 @@ pub struct HassState {
 pub:
 	entity_id string
 	state     string
-	// attributes			[]map[string]string
+	attributes	map[string]json2.Any
 pub mut:
 	last_updated time.Time
 	last_changed time.Time
@@ -41,15 +41,17 @@ fn parse_hass_state(json json2.Any) HassState {
 	mut state := HassState{
 		entity_id: mp['entity_id'].str()
 		state: mp['state'].str()
+		attributes: mp['attributes'].as_map()
 		last_changed_str: mp['last_changed'].str()
 		last_updated_str: mp['last_updated'].str()
 	}
-
+	
+	offset := time.offset()
 	last_updated := time.parse_iso8601(state.last_updated_str) or { time.Time{} }
-	state.last_updated = last_updated
+	state.last_updated = last_updated.add_seconds(offset)
 
 	last_changed := time.parse_iso8601(state.last_changed_str) or { time.Time{} }
-	state.last_changed = last_changed
+	state.last_changed = last_changed.add_seconds(offset)
 
 	return state
 }
