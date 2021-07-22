@@ -52,7 +52,6 @@ fn parse_hass_state(json json2.Any) HassState {
 
 	last_changed := time.parse_iso8601(state.last_changed_str) or { time.Time{} }
 	state.last_changed = last_changed.add_seconds(offset)
-
 	return state
 }
 

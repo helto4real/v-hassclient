@@ -1,6 +1,6 @@
 module hassclient
 
-import x.websocket
+import net.websocket
 import log
 import os
 import x.json2
