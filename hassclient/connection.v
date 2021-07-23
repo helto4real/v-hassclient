@@ -83,14 +83,16 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 					c.ws.write_string(subscribe_msg.encode_json()) ?
 				}
 				'event' {
-					event := mp['event'].as_map() //parse_hass_event_message(json_msg)
+					event := mp['event'].as_map() // parse_hass_event_message(json_msg)
 					match event['event_type'].str() {
 						// Home Assistant entity has changed state or attributes
 						'state_changed' {
 							c.logger.debug('state_changed event...')
 							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg)
 							c.events_channel <- state_changed_event_msg
-							println(state_changed_event_msg)
+							if state_changed_event_msg.event.data.entity_id != 'light.bed_light' {
+								c.call_service('light', 'toggle', json2.null, 'light.bed_light') ?
+							}
 						}
 						else {}
 					}

@@ -4,32 +4,13 @@ import time
 import x.json2
 import json
 
-pub struct HassMessage {
-pub:
-	id           int = -1
-	message_type string [json: 'type']
-	// Will do the raw thing when json is workning correctly again
-	// event			string [raw]
-	// result			string [raw]
-}
-
-// Parse the message type from Home Assistant message
-fn parse_hass_message(json json2.Any) HassMessage {
-	mut mp := json.as_map()
-
-	return HassMessage{
-		id: mp['id'].int()
-		message_type: mp['type'].str()
-	}
-}
-
 pub struct HassState {
 	last_changed_str string [json: 'last_changed']
 	last_updated_str string [json: 'last_updated']
 pub:
-	entity_id string
-	state     string
-	attributes	map[string]json2.Any
+	entity_id  string
+	state      string
+	attributes map[string]json2.Any
 pub mut:
 	last_updated time.Time
 	last_changed time.Time
@@ -45,7 +26,7 @@ fn parse_hass_state(json json2.Any) HassState {
 		last_changed_str: mp['last_changed'].str()
 		last_updated_str: mp['last_updated'].str()
 	}
-	
+
 	offset := time.offset()
 	last_updated := time.parse_iso8601(state.last_updated_str) or { time.Time{} }
 	state.last_updated = last_updated.add_seconds(offset)
@@ -73,11 +54,27 @@ fn parse_hass_event_data(json json2.Any) HassEventData {
 }
 
 pub struct HassEvent {
-	time_fired string
 pub:
 	event_type string
+	time_fired string
+	origin string
+	context Context
 }
 
+pub struct Context {
+    id string
+    parent_id string
+    user_id string
+}
+
+fn parse_context(json json2.Any) Context {
+	mut mp := json.as_map()
+	return Context{
+		id: mp['id'].str(),
+		parent_id: mp['parent_id'].str(),
+		user_id: mp['user_id'].str()
+	}
+}
 pub struct HassStateChangedEvent {
 pub mut:
 	time_fired string
@@ -164,4 +161,55 @@ fn (e AuthMessage) encode_json() string {
 	jsn_any['access_token'] = e.access_token
 	jsn_any['type'] = e.message_type
 	return jsn_any.str()
+}
+
+pub struct CallServiceMessage {
+	message_type string [json: 'type'] = 'call_service'
+pub:
+	id           int
+	domain       string
+	service      string
+	service_data json2.Any
+	target       []string
+}
+
+fn new_call_service_message(id int, domain string, service string, service_data json2.Any, target []string) CallServiceMessage {
+	return CallServiceMessage{
+		id: id
+		domain: domain
+		service: service
+		service_data: service_data
+		target: target
+	}
+}
+
+fn (e CallServiceMessage) encode_json() string {
+	mut jsn_any := map[string]json2.Any{}
+	jsn_any['id'] = e.id
+	jsn_any['type'] = e.message_type
+	jsn_any['domain'] = e.domain
+	jsn_any['service'] = e.service
+	if e.service_data !is json2.Null {
+		jsn_any['service_data'] = e.service_data
+	}
+	if e.target.len > 0 {
+		if e.target.len == 1 {
+			mut jsn_target := map[string]json2.Any{}
+			jsn_target['entity_id'] = e.target[0]
+			jsn_any['target'] = jsn_target
+		} else {
+			mut entities := []json2.Any{}
+			for entity_id in e.target {
+				mut jsn_target := map[string]json2.Any{}
+				jsn_target['entity_id'] = entity_id
+				entities << jsn_target
+			}
+			jsn_any['target'] = entities
+		}
+	}
+	return jsn_any.str()
+}
+
+pub struct Entity {
+	entity_id string
 }
