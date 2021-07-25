@@ -14,5 +14,3 @@ fn test_parse_message_type_auth_returns_auth_type() ? {
 	assert event_msg.event.data.new_state.state == '0.07'
 	assert event_msg.event.data.new_state.attributes['unit_of_measurement'].str() == ' '
 }
-
-

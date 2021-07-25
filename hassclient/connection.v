@@ -59,7 +59,7 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 		.text_frame {
 			msg_str := msg.payload.bytestr()
 			json_msg := json2.raw_decode(msg_str) or { json2.Any(json2.null) }
-
+			println('MESSAGE:\n$json_msg.str()')
 			if json_msg == json2.Any(json2.null) {
 				c.logger.error('failed to parse json: $json_msg.str()')
 				return
@@ -91,7 +91,8 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg)
 							c.events_channel <- state_changed_event_msg
 							if state_changed_event_msg.event.data.entity_id != 'light.bed_light' {
-								c.call_service('light', 'toggle', json2.null, 'light.bed_light') ?
+								c.call_service_with_area('light', 'toggle', json2.null,
+									'bedroom') ?
 							}
 						}
 						else {}

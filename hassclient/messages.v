@@ -57,28 +57,30 @@ pub struct HassEvent {
 pub:
 	event_type string
 	time_fired string
-	origin string
-	context Context
+	origin     string
+	context    Context
 }
 
 pub struct Context {
-    id string
-    parent_id string
-    user_id string
+	id        string
+	parent_id string
+	user_id   string
 }
 
 fn parse_context(json json2.Any) Context {
 	mut mp := json.as_map()
 	return Context{
-		id: mp['id'].str(),
-		parent_id: mp['parent_id'].str(),
+		id: mp['id'].str()
+		parent_id: mp['parent_id'].str()
 		user_id: mp['user_id'].str()
 	}
 }
+
 pub struct HassStateChangedEvent {
 pub mut:
 	time_fired string
 	data       HassEventData
+	context    Context
 }
 
 fn parse_hass_state_changed_event(json json2.Any) HassStateChangedEvent {
@@ -86,6 +88,7 @@ fn parse_hass_state_changed_event(json json2.Any) HassStateChangedEvent {
 	return HassStateChangedEvent{
 		time_fired: mp['time_fired'].str()
 		data: parse_hass_event_data(mp['data'])
+		context: parse_context(mp['context'])
 	}
 }
 
@@ -170,10 +173,10 @@ pub:
 	domain       string
 	service      string
 	service_data json2.Any
-	target       []string
+	target       Target
 }
 
-fn new_call_service_message(id int, domain string, service string, service_data json2.Any, target []string) CallServiceMessage {
+fn new_call_service_message(id int, domain string, service string, service_data json2.Any, target Target) CallServiceMessage {
 	return CallServiceMessage{
 		id: id
 		domain: domain
@@ -183,7 +186,7 @@ fn new_call_service_message(id int, domain string, service string, service_data 
 	}
 }
 
-fn (e CallServiceMessage) encode_json() string {
+fn (e CallServiceMessage) encode_json() json2.Any {
 	mut jsn_any := map[string]json2.Any{}
 	jsn_any['id'] = e.id
 	jsn_any['type'] = e.message_type
@@ -192,24 +195,49 @@ fn (e CallServiceMessage) encode_json() string {
 	if e.service_data !is json2.Null {
 		jsn_any['service_data'] = e.service_data
 	}
-	if e.target.len > 0 {
-		if e.target.len == 1 {
-			mut jsn_target := map[string]json2.Any{}
-			jsn_target['entity_id'] = e.target[0]
-			jsn_any['target'] = jsn_target
-		} else {
-			mut entities := []json2.Any{}
-			for entity_id in e.target {
-				mut jsn_target := map[string]json2.Any{}
-				jsn_target['entity_id'] = entity_id
-				entities << jsn_target
-			}
-			jsn_any['target'] = entities
-		}
+	if e.target.entity_id.len > 0 || e.target.device_id.len > 0 || e.target.area_id.len > 0 {
+		jsn_any['target'] = e.target.encode_json()
 	}
-	return jsn_any.str()
+
+	return jsn_any
 }
 
-pub struct Entity {
-	entity_id string
+pub struct Target {
+	entity_id []string
+	device_id []string
+	area_id   []string
+}
+
+pub fn (e Target) encode_json() json2.Any {
+	mut jsn_any := map[string]json2.Any{}
+	if e.entity_id.len > 0 {
+		if e.entity_id.len == 1 {
+			jsn_any['entity_id'] = e.entity_id[0]
+		} else {
+			mut entities := e.entity_id.map(json2.Any(it))
+
+			jsn_any['entity_id'] = entities
+		}
+	}
+
+	if e.device_id.len > 0 {
+		if e.device_id.len == 1 {
+			jsn_any['device_id'] = e.device_id[0]
+		} else {
+			mut devices := e.device_id.map(json2.Any(it))
+
+			jsn_any['device_id'] = devices
+		}
+	}
+
+	if e.area_id.len > 0 {
+		if e.area_id.len == 1 {
+			jsn_any['area_id'] = e.area_id[0]
+		} else {
+			mut areas := e.area_id.map(json2.Any(it))
+
+			jsn_any['area_id'] = areas
+		}
+	}
+	return jsn_any
 }
