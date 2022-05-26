@@ -6,8 +6,8 @@ import os
 
 fn main() {
 	mut c := hc.new_connection(hc.ConnectionConfig{
-		hass_uri: 'ws://host.docker.internal:8124/api/websocket'
-		token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkZmY1MjZmMzc3ZDg0MGI3ODdlZmJiY2Q3MjM5N2VjZSIsImlhdCI6MTYzNzE1MTI5OCwiZXhwIjoxOTUyNTExMjk4fQ.l-BU63JnSMYw3__YFKACT4sSmTmBFN2K4TiQWiGGD8k'
+		hass_uri: 'ws://192.168.1.7:8123/api/websocket'
+		token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIxMWZhZTQ3N2JhMGE0Yzk2YThmMTcxODBiYTFiZGIyZCIsImlhdCI6MTY1MzU3OTM5NCwiZXhwIjoxOTY4OTM5Mzk0fQ.opAW7yy30ahrRI6dWAxIXfUGj1PENd8TlpUM9Qu2-dQ'
 		// Uses the HASS_TOKEN env instead if empty
 		log_level: log.Level.debug
 	}) or { panic(err) }

@@ -93,8 +93,8 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg) ?
 							c.events_channel <- state_changed_event_msg
 							if state_changed_event_msg.event.data.entity_id != 'light.bed_light' {
-								c.call_service_with_area('light', 'toggle', json2.null,
-									'bedroom') ?
+								// c.call_service_with_area('light', 'toggle', json2.null,
+								// 	'bedroom') ?
 							}
 						}
 						else {}
