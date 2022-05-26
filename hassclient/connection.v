@@ -36,6 +36,7 @@ pub fn new_connection(cc ConnectionConfig) ?&HassConnection {
 		events_channel: ch
 		logger: &log.Log{}
 	}
+
 	// c.ws.nonce_size = 16 // For python back-ends
 	c.ws.on_message_ref(on_message, c)
 	c.ws.on_close(fn (mut ws websocket.Client, close_code int, reason string) ? {
@@ -66,7 +67,8 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 			}
 
 			mut mp := json_msg.as_map()
-			message_type := mp['type'].str()
+
+			message_type := (mp['type'] or { '' }).str()
 
 			match message_type {
 				// When auth_required send the authorization message with token
@@ -83,12 +85,12 @@ fn on_message(mut ws websocket.Client, msg &websocket.Message, mut c HassConnect
 					c.ws.write_string(subscribe_msg.encode_json()) ?
 				}
 				'event' {
-					event := mp['event'].as_map() // parse_hass_event_message(json_msg)
-					match event['event_type'].str() {
+					event := mp['event'] ?.as_map() // parse_hass_event_message(json_msg)
+					match event['event_type'] ?.str() {
 						// Home Assistant entity has changed state or attributes
 						'state_changed' {
 							c.logger.debug('state_changed event...')
-							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg)
+							mut state_changed_event_msg := parse_hass_changed_event_message(json_msg) ?
 							c.events_channel <- state_changed_event_msg
 							if state_changed_event_msg.event.data.entity_id != 'light.bed_light' {
 								c.call_service_with_area('light', 'toggle', json2.null,

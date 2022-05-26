@@ -16,15 +16,15 @@ pub mut:
 	last_changed time.Time
 }
 
-fn parse_hass_state(json json2.Any) HassState {
+fn parse_hass_state(json json2.Any) ?HassState {
 	mut mp := json.as_map()
 
 	mut state := HassState{
-		entity_id: mp['entity_id'].str()
-		state: mp['state'].str()
-		attributes: mp['attributes'].as_map()
-		last_changed_str: mp['last_changed'].str()
-		last_updated_str: mp['last_updated'].str()
+		entity_id: mp['entity_id'] ?.str()
+		state: mp['state'] ?.str()
+		attributes: mp['attributes'] ?.as_map()
+		last_changed_str: mp['last_changed'] ?.str()
+		last_updated_str: mp['last_updated'] ?.str()
 	}
 
 	offset := time.offset()
@@ -44,12 +44,12 @@ pub mut:
 	old_state HassState
 }
 
-fn parse_hass_event_data(json json2.Any) HassEventData {
+fn parse_hass_event_data(json json2.Any) ?HassEventData {
 	mut mp := json.as_map()
 	return HassEventData{
-		entity_id: mp['entity_id'].str()
-		new_state: parse_hass_state(mp['new_state'])
-		old_state: parse_hass_state(mp['old_state'])
+		entity_id: mp['entity_id'] ?.str()
+		new_state: parse_hass_state(mp['new_state'] ?) ?
+		old_state: parse_hass_state(mp['old_state'] ?) ?
 	}
 }
 
@@ -67,12 +67,12 @@ pub struct Context {
 	user_id   string
 }
 
-fn parse_context(json json2.Any) Context {
+fn parse_context(json json2.Any) ?Context {
 	mut mp := json.as_map()
 	return Context{
-		id: mp['id'].str()
-		parent_id: mp['parent_id'].str()
-		user_id: mp['user_id'].str()
+		id: mp['id'] ?.str()
+		parent_id: mp['parent_id'] ?.str()
+		user_id: mp['user_id'] ?.str()
 	}
 }
 
@@ -83,12 +83,12 @@ pub mut:
 	context    Context
 }
 
-fn parse_hass_state_changed_event(json json2.Any) HassStateChangedEvent {
+fn parse_hass_state_changed_event(json json2.Any) ?HassStateChangedEvent {
 	mut mp := json.as_map()
 	return HassStateChangedEvent{
-		time_fired: mp['time_fired'].str()
-		data: parse_hass_event_data(mp['data'])
-		context: parse_context(mp['context'])
+		time_fired: mp['time_fired'] ?.str()
+		data: parse_hass_event_data(mp['data'] ?) ?
+		context: parse_context(mp['context'] ?) ?
 	}
 }
 
@@ -98,11 +98,11 @@ pub mut:
 	event HassStateChangedEvent
 }
 
-fn parse_hass_changed_event_message(json json2.Any) StateChangedEventMessage {
+fn parse_hass_changed_event_message(json json2.Any) ?StateChangedEventMessage {
 	mut mp := json.as_map()
 	return StateChangedEventMessage{
-		id: mp['id'].int()
-		event: parse_hass_state_changed_event(mp['event'])
+		id: mp['id'] ?.int()
+		event: parse_hass_state_changed_event(mp['event'] ?) ?
 	}
 }
 
@@ -112,19 +112,19 @@ pub mut:
 	event HassEvent
 }
 
-fn parse_hass_event_message(json json2.Any) EventMessage {
+fn parse_hass_event_message(json json2.Any) ?EventMessage {
 	mut mp := json.as_map()
 	return EventMessage{
-		id: mp['id'].int()
-		event: parse_hass_hass_event(mp['event'])
+		id: mp['id'] ?.int()
+		event: parse_hass_hass_event(mp['event'] ?) ?
 	}
 }
 
-fn parse_hass_hass_event(json json2.Any) HassEvent {
+fn parse_hass_hass_event(json json2.Any) ?HassEvent {
 	mut mp := json.as_map()
 	return HassEvent{
-		time_fired: mp['time_fired'].str()
-		event_type: mp['event_type'].str()
+		time_fired: mp['time_fired'] ?.str()
+		event_type: mp['event_type'] ?.str()
 	}
 }
 
