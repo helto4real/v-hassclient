@@ -4,7 +4,7 @@ import x.json2
 import os
 
 fn test_parse_message_type_auth_returns_auth_type() ? {
-	state_changed_event := os.read_file('./hassclient/testdata/event.json') ?
+	state_changed_event := os.read_file('./hassclient/testdata/event.json')?
 	event_msg := parse_hass_changed_event_message(json2.raw_decode(state_changed_event)?) or {
 		StateChangedEventMessage{}
 	}
