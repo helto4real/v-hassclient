@@ -2,7 +2,6 @@ module hassclient
 
 import time
 import x.json2
-import json
 
 pub struct HassState {
 	last_changed_str string [json: 'last_changed']
@@ -16,8 +15,8 @@ pub mut:
 	last_changed time.Time
 }
 
-fn parse_hass_state(json json2.Any) !HassState {
-	mut mp := json.as_map()
+fn parse_hass_state(hass_state_json json2.Any) !HassState {
+	mut mp := hass_state_json.as_map()
 
 	mut state := HassState{
 		entity_id: mp['entity_id']!.str()
@@ -44,8 +43,8 @@ pub mut:
 	old_state HassState
 }
 
-fn parse_hass_event_data(json json2.Any) !HassEventData {
-	mut mp := json.as_map()
+fn parse_hass_event_data(hass_event_data_json json2.Any) !HassEventData {
+	mut mp := hass_event_data_json.as_map()
 	return HassEventData{
 		entity_id: mp['entity_id']!.str()
 		new_state: parse_hass_state(mp['new_state']!)!
@@ -67,8 +66,8 @@ pub struct Context {
 	user_id   string
 }
 
-fn parse_context(json json2.Any) !Context {
-	mut mp := json.as_map()
+fn parse_context(context_json json2.Any) !Context {
+	mut mp := context_json.as_map()
 	return Context{
 		id: mp['id']!.str()
 		parent_id: mp['parent_id']!.str()
@@ -83,8 +82,8 @@ pub mut:
 	context    Context
 }
 
-fn parse_hass_state_changed_event(json json2.Any) !HassStateChangedEvent {
-	mut mp := json.as_map()
+fn parse_hass_state_changed_event(hass_state_changed_event_json json2.Any) !HassStateChangedEvent {
+	mut mp := hass_state_changed_event_json.as_map()
 	return HassStateChangedEvent{
 		time_fired: mp['time_fired']!.str()
 		data: parse_hass_event_data(mp['data']!)!
@@ -98,8 +97,8 @@ pub mut:
 	event HassStateChangedEvent
 }
 
-fn parse_hass_changed_event_message(json json2.Any) !StateChangedEventMessage {
-	mut mp := json.as_map()
+fn parse_hass_changed_event_message(changed_event_json json2.Any) !StateChangedEventMessage {
+	mut mp := changed_event_json.as_map()
 	return StateChangedEventMessage{
 		id: mp['id']!.int()
 		event: parse_hass_state_changed_event(mp['event']!)!
@@ -112,16 +111,16 @@ pub mut:
 	event HassEvent
 }
 
-fn parse_hass_event_message(json json2.Any) !EventMessage {
-	mut mp := json.as_map()
+fn parse_hass_event_message(hass_event_message json2.Any) !EventMessage {
+	mut mp := hass_event_message.as_map()
 	return EventMessage{
 		id: mp['id']!.int()
 		event: parse_hass_hass_event(mp['event']!)!
 	}
 }
 
-fn parse_hass_hass_event(json json2.Any) !HassEvent {
-	mut mp := json.as_map()
+fn parse_hass_hass_event(hass_event_json json2.Any) !HassEvent {
+	mut mp := hass_event_json.as_map()
 	return HassEvent{
 		time_fired: mp['time_fired']!.str()
 		event_type: mp['event_type']!.str()

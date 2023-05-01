@@ -4,6 +4,7 @@ import net.websocket
 import log
 import os
 import x.json2
+import time
 
 [heap]
 pub struct HassConnection {
@@ -27,14 +28,19 @@ pub struct ConnectionConfig {
 // Instance new connection to Home Assistant
 pub fn new_connection(cc ConnectionConfig) !&HassConnection {
 	token := if cc.token != '' { cc.token } else { os.getenv('HOMEASSISTANT__TOKEN') }
-	cl := websocket.new_client(cc.hass_uri)!
+	mut logger := &log.Log{level: cc.log_level}
+	
+	mut cl := websocket.new_client(cc.hass_uri, read_timeout: 60 * time.second)!
+	
+	cl.logger =&log.Logger(logger)
+
 	ch := chan StateChangedEventMessage{cap: 100}
 	mut c := &HassConnection{
 		hass_uri: cc.hass_uri
 		token: token
 		ws: cl
 		events_channel: ch
-		logger: &log.Log{}
+		logger: logger
 	}
 
 	// c.ws.nonce_size = 16 // For python back-ends
