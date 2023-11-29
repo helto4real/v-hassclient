@@ -4,8 +4,8 @@ import time
 import x.json2
 
 pub struct HassState {
-	last_changed_str string [json: 'last_changed']
-	last_updated_str string [json: 'last_updated']
+	last_changed_str string @[json: 'last_changed']
+	last_updated_str string @[json: 'last_updated']
 pub:
 	entity_id  string
 	state      string
@@ -128,7 +128,7 @@ fn parse_hass_hass_event(hass_event_json json2.Any) !HassEvent {
 }
 
 pub struct SubscribeToEventsMessage {
-	message_type string [json: 'type'] = 'subscribe_events'
+	message_type string = 'subscribe_events' @[json: 'type']
 pub:
 	id int
 }
@@ -147,7 +147,7 @@ fn (e SubscribeToEventsMessage) encode_json() string {
 }
 
 pub struct AuthMessage {
-	message_type string [json: 'type'] = 'auth'
+	message_type string = 'auth' @[json: 'type']
 pub:
 	access_token string
 }
@@ -166,7 +166,7 @@ fn (e AuthMessage) encode_json() string {
 }
 
 pub struct CallServiceMessage {
-	message_type string [json: 'type'] = 'call_service'
+	message_type string = 'call_service' @[json: 'type']
 pub:
 	id           int
 	domain       string
